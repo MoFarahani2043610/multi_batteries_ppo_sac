@@ -175,7 +175,7 @@ class SyntheticPriceSource(PriceSource):
 
     def __init__(
         self,
-        n_steps: int = 288,
+        n_steps: int = 288,          
         dt_hours: float = 5 / 60,
         mean_price: float = 30.0,
         volatility: float = 5.0,
