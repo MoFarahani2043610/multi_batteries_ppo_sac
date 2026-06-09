@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, r'D:\Project 2026\env\env')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 """
 baselines/random_policy.py
 ===========================

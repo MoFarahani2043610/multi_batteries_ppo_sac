@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, r'D:\Project 2026\env\env')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 """
 baselines/perfect_foresight.py
 ================================
@@ -43,65 +46,54 @@ Run
 
 import sys, os
 
-import storage_arbitrage_env
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from storage_arbitrage_env import StorageArbitrageEnv
+
+sys.path.insert(0, r"D:\Project 2026\env\env")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
-from baselines.random_policy import run_episodes
-
+try:
+    from baselines.random_policy import run_episodes
+except ModuleNotFoundError:
+    from random_policy import run_episodes
 
 # ─────────────────────────────────────────────────────
 #  Helper: extract full episode price sequence
 # ─────────────────────────────────────────────────────
 
 def _get_episode_prices(env):
-    """
-    Return the complete price array for the current episode window.
-    Shape: (T, M).
+    import copy
+    src = getattr(env, 'price_source', None) or getattr(env, 'prices', None)
+    if src is None:
+        raise AttributeError("Cannot find price source.")
 
-    Works with both SyntheticPrices and HistoricalPrices.
-    Does NOT advance the price source.
-    """
-    src = env.prices
-
-    # HistoricalPrices — slice the array directly
+    # HistoricalPrices
     if hasattr(src, "_prices") and hasattr(src, "_start"):
-        start = src._start
-        end   = start + src.episode_len
-        return src._prices[start:end].astype(np.float64)   # (T, M)
+        ep_len = getattr(src, 'episode_len', getattr(src, '_n_steps', 288))
+        return src._prices[src._start:src._start + ep_len].astype(np.float64)
 
-    # SyntheticPrices — step through, collecting prices, then restore state
-    elif hasattr(src, "episode_steps"):
-        T = src.episode_steps
-
-        # save state
+    # SyntheticPriceSource (any variant)
+    elif hasattr(src, "_price"):
+        T           = getattr(src, '_n_steps', getattr(src, 'episode_steps', 288))
         saved_price = src._price
-        saved_t     = src._t
-        saved_rng   = np.random.default_rng()          # fresh rng won't help
-        # deep-copy the rng state
-        import copy
-        saved_rng = copy.deepcopy(src._rng)
-
+        saved_t     = getattr(src, '_step_idx', getattr(src, '_t', 0))
+        saved_rng   = copy.deepcopy(src._rng)
         prices_list = [src._price]
         for _ in range(T - 1):
             p, _, done = src.step()
             prices_list.append(float(p[0]))
             if done:
                 break
-
-        # restore state exactly
         src._price = saved_price
-        src._t     = saved_t
-        src._rng   = saved_rng
-
+        if hasattr(src, '_step_idx'):
+            src._step_idx = saved_t
+        else:
+            src._t = saved_t
+        src._rng = saved_rng
         return np.array(prices_list, dtype=np.float64).reshape(-1, 1)
 
     else:
-        raise ValueError(
-            "Cannot extract episode prices from this price source. "
-            "Use SyntheticPrices or HistoricalPrices."
-        )
-
+        raise ValueError("Use SyntheticPrices or HistoricalPrices.")
 
 # ─────────────────────────────────────────────────────
 #  LP solver
@@ -326,8 +318,12 @@ def compare_all(env, n_episodes=5, seed=0):
 
     Your trained DRL agent should land between threshold and LP.
     """
-    from baselines.random_policy    import RandomPolicy
-    from baselines.threshold_policy import ThresholdPolicy
+    try:
+        from baselines.random_policy    import RandomPolicy
+        from baselines.threshold_policy import ThresholdPolicy
+    except ModuleNotFoundError:
+        from random_policy    import RandomPolicy
+        from threshold_policy import ThresholdPolicy
 
     print(f"\n{'─'*54}")
     print(f"  Baseline comparison — N={env.N} batteries, "
@@ -386,7 +382,7 @@ if __name__ == "__main__":
                         help="Run all three baselines and print comparison table")
     args = parser.parse_args()
 
-    env = storage_arbitrage_env.StorageArbitrageEnv(n_batteries=args.n_batteries)
+    env = StorageArbitrageEnv(n_batteries=args.n_batteries)
 
     if args.compare:
         compare_all(env, n_episodes=args.n_episodes, seed=args.seed)
@@ -405,3 +401,4 @@ if __name__ == "__main__":
         print(f"  Min / Max    : ${res['min_profit']:.4f} / ${res['max_profit']:.4f}")
         print(f"  Avg solve    : {res['mean_solve_time']:.2f}s per episode")
         print(f"\n  → This is the UPPER BOUND. No real agent can beat this.")
+
