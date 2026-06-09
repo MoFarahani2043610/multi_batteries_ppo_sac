@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────────────────
+# Multi-Battery Energy Storage Arbitrage — SAC vs PPO
+# Requirements file
+# Tested on Python 3.10+ (developed on Python 3.14 / Windows 11)
+# Install: pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────────
+
+# ── Core RL framework ─────────────────────────────────────────────
+gymnasium>=0.29.0               # Environment API (Farama Foundation)
+stable-baselines3>=2.3.0        # SAC and PPO implementations
+torch>=2.0.0                    # PyTorch backend for SB3
+
+# ── LP baseline (perfect-foresight upper bound) ───────────────────
+cvxpy>=1.4.0                    # Convex optimisation (uses CLARABEL solver)
+
+# ── Data pipeline ─────────────────────────────────────────────────
+gridstatus>=0.24.0              # CAISO / ERCOT / PJM market data API
+pandas>=2.0.0                   # DataFrame handling
+pyarrow>=14.0.0                 # Parquet file caching (preferred engine)
+numpy>=1.26.0                   # Array operations
+
+# ── Training utilities ────────────────────────────────────────────
+pyyaml>=6.0                     # YAML config files (sac_n1.yaml, ppo_n1.yaml)
+tensorboard>=2.14.0             # Training curve visualisation
+
+# ── Visualisation ─────────────────────────────────────────────────
+matplotlib>=3.7.0               # Plots and figures
+
+# ── Testing ───────────────────────────────────────────────────────
+pytest>=7.4.0                   # Test suite (tests/test_env.py)
+
+# ─────────────────────────────────────────────────────────────────
+# NOTES:
+#
+# 1. CLARABEL solver is bundled with cvxpy>=1.4 — no separate install needed.
+#
+# 2. fastparquet is an optional alternative to pyarrow:
+#    pip install fastparquet
+#    The loader.py will use whichever is available.
+#
+# 3. gridstatus requires an internet connection for first-time data download.
+#    After download, data is cached as Parquet in data/cache/ and gridstatus
+#    is not needed again.
+#
+# 4. torch CPU-only (lighter install, no GPU required for N=1 experiments):
+#    pip install torch --index-url https://download.pytorch.org/whl/cpu
+#
+# 5. For GPU training (recommended for M3 scaling sweep):
+#    pip install torch --index-url https://download.pytorch.org/whl/cu121
+# ─────────────────────────────────────────────────────────────────
