@@ -5,11 +5,13 @@ env:
   dt_hours: 0.08333
   degradation_penalty: 0.0
   normalize_obs: true
-  price_ref: 30.0
+  price_ref: 52.0          # real CAISO mean price $/MWh
+  price_source: caiso      # use real CAISO data via loader.py
+  caiso_path: cache/caiso_2024_2026_5min.parquet
 
 training:
   total_timesteps: 1000000
-  n_seeds: 1
+  n_seeds: 5
   eval_freq: 5000
   eval_episodes: 10
   log_interval: 1

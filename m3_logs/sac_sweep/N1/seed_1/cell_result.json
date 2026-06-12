@@ -1,0 +1,13 @@
+{
+  "algo": "sac",
+  "n_batteries": 1,
+  "seed": 1,
+  "mean_return": 189.0127483505635,
+  "std_return": 93.55802891925954,
+  "min_return": 25.827923605296196,
+  "max_return": 360.4295831057167,
+  "lp_return": 242.56744345135243,
+  "lp_fraction": 0.7792172999855627,
+  "train_time": 44970.35307840002,
+  "log_dir": "m3_logs\\sac_sweep\\N1\\seed_1"
+}

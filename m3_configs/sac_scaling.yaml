@@ -1,0 +1,45 @@
+# m3_configs/sac_scaling.yaml
+# ============================
+# Milestone 3 — SAC scalability sweep config
+# Used by: m3_scripts/scale_sweep.py
+#
+# N is set dynamically by scale_sweep.py for each cell.
+# All other parameters are fixed across the sweep for fair comparison.
+
+algo: sac
+
+env:
+  # n_batteries is overridden per cell by scale_sweep.py
+  n_batteries: 1
+  dt_hours: 0.08333           # 5-minute timesteps
+  degradation_penalty: 0.0
+  normalize_obs: true
+  price_ref: 30.0             # matches synthetic mean_price=30
+
+training:
+  total_timesteps: 1000000    # 1M steps per cell — equal compute budget
+  n_seeds: 5                  # 5 seeds per (algo, N) cell
+  eval_freq: 10000            # evaluate every 10K steps
+  eval_episodes: 10
+  log_interval: 5
+
+sac:
+  learning_rate: 0.001        # tuned in M2
+  buffer_size: 500000         # tuned in M2
+  learning_starts: 1000       # tuned in M2
+  batch_size: 256
+  tau: 0.005
+  gamma: 0.99
+  train_freq: 1
+  gradient_steps: 1
+  ent_coef: auto              # automatic entropy tuning — scales to -N
+  target_entropy: auto        # = -N automatically in SB3
+  policy: MlpPolicy
+  policy_kwargs:
+    net_arch: [400, 300]      # tuned in M2
+
+logging:
+  log_dir: m3_logs/sac_sweep
+  tensorboard: true
+  save_freq: 100000           # save checkpoint every 100K steps
+  verbose: 1
