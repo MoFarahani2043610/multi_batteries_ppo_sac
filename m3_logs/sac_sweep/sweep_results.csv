@@ -1,2 +1,0 @@
-algo,n_batteries,seed,mean_return,std_return,lp_return,lp_fraction,train_time
-sac,1,0,120.79879098382204,60.52207757889078,179.423555976669,0.6732604887149259,44006.95745009999

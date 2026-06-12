@@ -3,3 +3,9 @@ __pycache__/
 *.pyo
 .env
 m2_logs/
+m3_logs/
+*.npz
+*.zip
+*.tfevents*
+*.csv
+cache/
