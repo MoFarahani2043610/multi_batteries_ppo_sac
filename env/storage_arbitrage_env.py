@@ -175,7 +175,7 @@ class SyntheticPriceSource(PriceSource):
 
     def __init__(
         self,
-        n_steps: int = 288,          
+        n_steps: int = 288,
         dt_hours: float = 5 / 60,
         mean_price: float = 30.0,
         volatility: float = 5.0,
@@ -425,6 +425,12 @@ class StorageArbitrageEnv(gym.Env):
         self._cumulative_profit = 0.0
         self._episode_done = False
 
+        # --- constraint violation counters (Milestone 3 metrics) ---
+        # SoC saturation: timesteps where SoC clip() was active
+        self._soc_saturation_events = 0
+        # Power-limit hits: timesteps where action exceeded Pmax or Pdis_max
+        self._power_limit_hits = 0
+
     # ------------------------------------------------------------------
     # Gymnasium API
     # ------------------------------------------------------------------
@@ -455,6 +461,8 @@ class StorageArbitrageEnv(gym.Env):
         self._step_idx = 0
         self._cumulative_profit = 0.0
         self._episode_done = False
+        self._soc_saturation_events = 0
+        self._power_limit_hits = 0
 
         obs = self._get_obs()
         info = self._get_info(
@@ -480,9 +488,14 @@ class StorageArbitrageEnv(gym.Env):
         action_clipped = np.clip(action, act_low, act_high)
         was_clipped = not np.allclose(action, action_clipped)
 
+        # count power-limit hits (any battery exceeded its power bounds)
+        if was_clipped:
+            self._power_limit_hits += 1
+
         # --- compute reward and update SoC ---
         cash_flow = 0.0
         degradation_cost = 0.0
+        soc_saturated = False  # track SoC saturation this step
 
         for i, b in enumerate(self.batteries):
             a_i = action_clipped[i]
@@ -497,11 +510,16 @@ class StorageArbitrageEnv(gym.Env):
                 delta_energy = (1.0 / b.eta_discharge) * a_i * self.dt  # negative
 
             # update SoC with physical clip
+            unconstrained_soc = self._soc[i] + delta_energy
             new_soc = np.clip(
-                self._soc[i] + delta_energy,
+                unconstrained_soc,
                 b.r_min,
                 b.r_max,
             )
+
+            # detect SoC saturation: clip actually changed the value
+            if abs(new_soc - unconstrained_soc) > 1e-9:
+                soc_saturated = True
 
             # actual power delivered to/from grid (may differ after SoC clip)
             if a_i >= 0:
@@ -521,6 +539,10 @@ class StorageArbitrageEnv(gym.Env):
 
         reward = cash_flow - degradation_cost
         self._cumulative_profit += cash_flow  # track gross profit separately
+
+        # count SoC saturation events
+        if soc_saturated:
+            self._soc_saturation_events += 1
 
         # --- advance price source ---
         p_next, f_next, price_done = self.price_source.step()
@@ -581,6 +603,14 @@ class StorageArbitrageEnv(gym.Env):
             "actions_clipped": clipped,
             "step_idx": self._step_idx,
             "cumulative_profit": self._cumulative_profit,
+            # Milestone 3 constraint violation metrics
+            "soc_saturation_events": self._soc_saturation_events,
+            "power_limit_hits": self._power_limit_hits,
+            "total_violations": self._soc_saturation_events + self._power_limit_hits,
+            # violation rate = violations / steps (useful for normalised comparison)
+            "violation_rate": (
+                (self._soc_saturation_events + self._power_limit_hits) / max(self._step_idx, 1)
+            ),
         }
 
     # ------------------------------------------------------------------

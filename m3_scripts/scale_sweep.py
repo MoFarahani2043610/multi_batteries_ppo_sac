@@ -145,6 +145,22 @@ def train_one_cell(algo: str, n: int, seed: int, config: dict) -> dict:
     # ── evaluate ──────────────────────────────────────────────────
     eval_results = agent.evaluate(n_episodes=20, deterministic=True)
 
+    # ── collect constraint violation metrics from eval episodes ───
+    violation_rates = []
+    soc_sat_rates   = []
+    power_hit_rates = []
+    eval_env = make_env_for_n(n, config, seed)
+    for ep in range(20):
+        obs, info = eval_env.reset(seed=2000 + ep)
+        done = False
+        while not done:
+            action, _ = agent.model.predict(obs, deterministic=True)
+            obs, _, terminated, truncated, info = eval_env.step(action)
+            done = terminated or truncated
+        violation_rates.append(info["violation_rate"])
+        soc_sat_rates.append(info["soc_saturation_events"] / max(info["step_idx"], 1))
+        power_hit_rates.append(info["power_limit_hits"] / max(info["step_idx"], 1))
+
     # ── LP baseline for this cell ─────────────────────────────────
     print(f"  Computing LP baseline for N={n} seed={seed}...")
     lp_return = get_lp_baseline(n, config, seed, n_episodes=5)
@@ -154,17 +170,21 @@ def train_one_cell(algo: str, n: int, seed: int, config: dict) -> dict:
     lp_fraction = mean_return / lp_return if lp_return > 0 else 0.0
 
     result = {
-        "algo":        algo,
-        "n_batteries": n,
-        "seed":        seed,
-        "mean_return": mean_return,
-        "std_return":  eval_results["std_return"],
-        "min_return":  eval_results["min_return"],
-        "max_return":  eval_results["max_return"],
-        "lp_return":   lp_return,
-        "lp_fraction": lp_fraction,
-        "train_time":  train_time,
-        "log_dir":     str(log_dir),
+        "algo":                algo,
+        "n_batteries":         n,
+        "seed":                seed,
+        "mean_return":         mean_return,
+        "std_return":          eval_results["std_return"],
+        "min_return":          eval_results["min_return"],
+        "max_return":          eval_results["max_return"],
+        "lp_return":           lp_return,
+        "lp_fraction":         lp_fraction,
+        "train_time":          train_time,
+        "log_dir":             str(log_dir),
+        # Milestone 3 constraint violation metrics
+        "violation_rate":      float(np.mean(violation_rates)),
+        "soc_saturation_rate": float(np.mean(soc_sat_rates)),
+        "power_limit_rate":    float(np.mean(power_hit_rates)),
     }
 
     # save cell result
