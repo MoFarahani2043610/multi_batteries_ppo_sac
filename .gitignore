@@ -2,7 +2,11 @@
 *.pyc
 *.pyo
 .env
-m2_logs/
+m2_logs/**/*.zip
+m2_logs/**/*.npz
+m2_logs/**/*.csv
+m2_logs/**/monitor*
+m2_logs/**/eval_monitor*
 m3_logs/
 *.npz
 *.zip
