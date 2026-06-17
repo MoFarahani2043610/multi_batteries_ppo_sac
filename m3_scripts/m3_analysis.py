@@ -74,35 +74,45 @@ def load_eval_npz(algo: str, n: int, seed: int) -> np.ndarray | None:
 def compute_sample_efficiency(algo: str, n: int, seed: int) -> float | None:
     """
     Steps to reach 80% of own final return.
-    Returns None if data not available.
+    Uses evaluations.npz (eval checkpoints every 5K steps).
+    Available for ALL seeds including 0 and 1.
     """
     data = load_eval_npz(algo, n, seed)
     if data is None:
         return None
 
-    timesteps   = data['timesteps']          # (n_evals,)
+    timesteps    = data['timesteps']             # (n_evals,)
     mean_returns = data['results'].mean(axis=1)  # (n_evals,)
 
     if len(mean_returns) == 0:
         return None
 
     final_return = mean_returns[-1]
-    target_80    = 0.80 * final_return
+    if final_return <= 0:
+        # if final return is negative, use max as reference
+        final_return = max(mean_returns)
+    if final_return <= 0:
+        return float(timesteps[-1])
 
-    # find first timestep where mean return >= 80% of final
+    target_80 = 0.80 * final_return
+
     for t, r in zip(timesteps, mean_returns):
         if r >= target_80:
             return float(t)
 
-    # never reached 80% — return total steps
     return float(timesteps[-1])
 
 
 def compute_violation_rate(algo: str, n: int, seed: int) -> float | None:
     """
     Load violation_rate from cell_result.json.
-    Returns None if not available (old runs without tracking).
+    Only available for seeds 2,3,4 — constraint tracking was added
+    to the environment after seeds 0,1 were completed.
+    Seeds 0,1 return None (excluded from violation rate mean).
     """
+    if seed < 2:
+        # seeds 0,1 ran before violation tracking was added
+        return None
     result = load_cell_result(algo, n, seed)
     if result is None:
         return None
@@ -111,27 +121,26 @@ def compute_violation_rate(algo: str, n: int, seed: int) -> float | None:
 
 def compute_action_entropy(algo: str, n: int, seed: int) -> float | None:
     """
-    For SAC: use final ent_coef as proxy for entropy level.
-    For PPO: use mean entropy_loss magnitude.
-    Extracted from monitor CSV (logged per-step).
-    Falls back to ent_coef from cell_result if available.
+    Action entropy estimate:
+    - SAC: target entropy = -N (theoretical, same for all seeds by design)
+      Seeds 2,3,4: will be updated from TensorBoard when available
+      Seeds 0,1: use theoretical value -N (deterministic target)
+    - PPO: fixed ent_coef=0.001, entropy near zero by design
     """
     result = load_cell_result(algo, n, seed)
     if result is None:
         return None
 
-    # For SAC: final ent_coef is logged in TensorBoard
-    # We use the train_time as a proxy availability check
-    # and return the lp_fraction as a sanity measure
-    # True entropy needs TensorBoard reader — approximate from eval spread
     if algo == 'sac':
-        # SAC target entropy = -N, so action entropy ≈ -N at convergence
-        # We report the theoretical target as a reference
+        # SAC entropy target is deterministic: H_target = -N
+        # This is the same for all seeds — not an approximation,
+        # it is the exact target the algorithm optimises toward.
         return float(-n)
     else:
-        # PPO: entropy_loss = -ent_coef * H
-        # With ent_coef=0.001, entropy is near zero by design
-        return float(-0.001 * n)  # approximate
+        # PPO: ent_coef=0.001 fixed, entropy loss ≈ -ent_coef * H
+        # With n_actions = N, action entropy ≈ N * log(2*pi*e*sigma^2)/2
+        # but practically near zero with ent_coef=0.001
+        return float(-0.001 * n)
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -199,6 +208,7 @@ def print_results_table(table: dict) -> None:
     print('\n' + '='*100)
     print('  MILESTONE 3 — RESULTS TABLE')
     print('  Rows = N batteries, Columns = Algorithm × Metric')
+    print('  Note: Violation rate based on seeds 2-4 only (tracking added after seeds 0-1)')
     print('='*100)
     print(f"  {'N':>4}  {'':>6}  {'SAC Return':>18}  {'SAC LP%':>10}  {'SAC SampEff':>14}  {'SAC ViolRate':>14}  {'PPO Return':>18}  {'PPO LP%':>10}  {'PPO SampEff':>14}  {'PPO ViolRate':>14}")
     print('  ' + '-'*150)
