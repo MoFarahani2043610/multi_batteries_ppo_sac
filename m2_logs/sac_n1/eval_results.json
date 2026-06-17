@@ -1,0 +1,85 @@
+{
+  "algo": "sac",
+  "config": {
+    "algo": "sac",
+    "env": {
+      "n_batteries": 1,
+      "dt_hours": 0.08333,
+      "degradation_penalty": 0.0,
+      "normalize_obs": true,
+      "price_ref": 52.0,
+      "price_source": "caiso",
+      "caiso_path": "cache/caiso_2024_2026_5min.parquet"
+    },
+    "training": {
+      "total_timesteps": 1000000,
+      "n_seeds": 5,
+      "eval_freq": 5000,
+      "eval_episodes": 10,
+      "log_interval": 1
+    },
+    "sac": {
+      "learning_rate": 0.001,
+      "buffer_size": 500000,
+      "learning_starts": 1000,
+      "batch_size": 256,
+      "tau": 0.005,
+      "gamma": 0.99,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "ent_coef": "auto",
+      "target_entropy": "auto",
+      "policy": "MlpPolicy",
+      "policy_kwargs": {
+        "net_arch": [
+          400,
+          300
+        ]
+      }
+    },
+    "logging": {
+      "log_dir": "m2_logs/sac_n1",
+      "tensorboard": true,
+      "save_freq": 50000,
+      "verbose": 1
+    }
+  },
+  "baselines": {
+    "random": -12.719304967724751,
+    "threshold": 86.81704785307268,
+    "lp": 182.82727253276357
+  },
+  "results": [
+    {
+      "mean_return": 122.83636921769066,
+      "std_return": 32.49562580448983,
+      "min_return": 69.32965113264939,
+      "max_return": 227.55363685428208,
+      "returns": [
+        140.57931328079655,
+        150.88344114670963,
+        98.9785846907362,
+        128.1452605206817,
+        103.94244632864354,
+        112.2579104659586,
+        157.83263981592805,
+        123.92566765528018,
+        85.92454097488562,
+        117.76685994356399,
+        114.57655985186186,
+        129.28094480863842,
+        69.32965113264939,
+        89.09710609498852,
+        101.92941292585036,
+        129.96783070300125,
+        104.29850738419965,
+        227.55363685428208,
+        143.03815894040093,
+        127.41891083475691
+      ],
+      "seed": 4,
+      "train_time": 47484.09409859986,
+      "algo": "sac"
+    }
+  ]
+}
