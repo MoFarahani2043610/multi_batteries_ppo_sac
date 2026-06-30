@@ -1,0 +1,85 @@
+{
+  "algo": "sac",
+  "config": {
+    "algo": "sac",
+    "env": {
+      "n_batteries": 1,
+      "dt_hours": 0.08333,
+      "degradation_penalty": 0.0,
+      "normalize_obs": true,
+      "price_ref": 52.0,
+      "price_source": "caiso",
+      "caiso_path": "cache/caiso_2024_2026_5min.parquet"
+    },
+    "training": {
+      "total_timesteps": 1000000,
+      "n_seeds": 5,
+      "eval_freq": 5000,
+      "eval_episodes": 10,
+      "log_interval": 1
+    },
+    "sac": {
+      "learning_rate": 0.001,
+      "buffer_size": 500000,
+      "learning_starts": 1000,
+      "batch_size": 256,
+      "tau": 0.005,
+      "gamma": 0.99,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "ent_coef": "auto",
+      "target_entropy": "auto",
+      "policy": "MlpPolicy",
+      "policy_kwargs": {
+        "net_arch": [
+          400,
+          300
+        ]
+      }
+    },
+    "logging": {
+      "log_dir": "m2_logs/sac_n1",
+      "tensorboard": true,
+      "save_freq": 50000,
+      "verbose": 1
+    }
+  },
+  "baselines": {
+    "random": -12.719304967724751,
+    "threshold": 86.81704785307268,
+    "lp": 182.82727253276357
+  },
+  "results": [
+    {
+      "mean_return": 114.8546002278354,
+      "std_return": 32.91381461957934,
+      "min_return": 72.31299173391139,
+      "max_return": 205.40570659250872,
+      "returns": [
+        164.12118440171903,
+        154.13414510356515,
+        121.63114062007766,
+        116.88071483138614,
+        72.31299173391139,
+        102.6640325418452,
+        103.0489145339192,
+        118.53084122477517,
+        80.32458559394526,
+        85.32005026179013,
+        112.75041877744184,
+        75.59998245394851,
+        80.03051665777174,
+        114.68861771988729,
+        102.71871829652926,
+        100.31092764890667,
+        100.03197999636131,
+        205.40570659250872,
+        155.87809598035298,
+        130.70843958606562
+      ],
+      "seed": 1,
+      "train_time": 41761.46227269992,
+      "algo": "sac"
+    }
+  ]
+}
