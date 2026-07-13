@@ -12,3 +12,5 @@ m3_logs/
 *.zip
 *.tfevents*
 cache/
+m4_logs/
+.venv/

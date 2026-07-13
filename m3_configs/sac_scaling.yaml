@@ -14,7 +14,9 @@ env:
   dt_hours: 0.08333           # 5-minute timesteps
   degradation_penalty: 0.0
   normalize_obs: true
-  price_ref: 30.0             # matches synthetic mean_price=30
+  price_ref: 52.0             # real CAISO mean price $/MWh
+  price_source: caiso         # use real CAISO data
+  caiso_path: cache/caiso_2024_2026_5min.parquet
 
 training:
   total_timesteps: 1000000    # 1M steps per cell — equal compute budget

@@ -498,80 +498,6 @@ def make_features(timestamps: np.ndarray) -> np.ndarray:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  Offline fallback — synthetic prices that mimic real market statistics
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Real approximate market statistics (2022-2023 averages)
-_MARKET_STATS = {
-    "caiso": {"mean": 52.0, "std": 38.0, "spike_prob": 0.008, "floor": -50.0},
-    "ercot": {"mean": 44.0, "std": 55.0, "spike_prob": 0.015, "floor": -10.0},
-    "pjm":   {"mean": 36.0, "std": 25.0, "spike_prob": 0.005, "floor": -10.0},
-}
-
-
-def make_synthetic_prices(
-    market:  str,
-    n_steps: int  = 210_240,   # ≈ 2 years at 5-min
-    seed:    int  = 42,
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Generate synthetic LMPs calibrated to real market statistics.
-
-    Use this when gridstatus is unavailable (no internet, API changes, etc.).
-    The statistics (mean, std, spike probability) match real 2022-2023 data.
-
-    Parameters
-    ----------
-    market : str
-        "caiso", "ercot", or "pjm" — determines statistical parameters.
-    n_steps : int
-        Number of 5-minute steps to generate. Default ≈ 2 years.
-    seed : int
-        Random seed for reproducibility.
-
-    Returns
-    -------
-    prices : np.ndarray, shape (n_steps, 1), float32
-    timestamps : np.ndarray of datetime64[ns]  (synthetic, starts 2022-01-01)
-    """
-    market = market.lower()
-    if market not in _MARKET_STATS:
-        raise ValueError(f"Unknown market '{market}'")
-
-    s     = _MARKET_STATS[market]
-    rng   = np.random.default_rng(seed)
-    price = s["mean"]
-    prices = np.empty(n_steps, dtype=np.float64)
-
-    for t in range(n_steps):
-        noise   = rng.normal(0, s["std"] * 0.05)
-        price  += 0.02 * (s["mean"] - price) + noise
-
-        # daily price cycle — peaks at 8am and 7pm
-        step_in_day = t % 288
-        angle       = 2 * np.pi * step_in_day / 288
-        cycle       = s["std"] * 0.3 * (np.sin(angle - np.pi / 3) + 0.5)
-        price      += cycle * 0.1
-
-        # spikes
-        if rng.random() < s["spike_prob"]:
-            price *= rng.uniform(3, 10)
-
-        prices[t] = np.clip(price, s["floor"], 3000.0)
-
-    timestamps = np.array(
-        pd.date_range("2022-01-01", periods=n_steps, freq="5min")
-    )
-
-    logger.info(
-        f"Synthetic {market.upper()}: {n_steps:,} steps  "
-        f"mean={prices.mean():.1f}  std={prices.std():.1f}"
-    )
-
-    return prices.astype(np.float32).reshape(-1, 1), timestamps
-
-
-# ─────────────────────────────────────────────────────────────────────────────
 #  Cache inspection utility
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -638,10 +564,6 @@ if __name__ == "__main__":
         help="Force re-download even if cache exists",
     )
     parser.add_argument(
-        "--synthetic", action="store_true",
-        help="Generate synthetic prices (no internet needed, for testing)",
-    )
-    parser.add_argument(
         "--info", action="store_true",
         help="Show cache contents and exit",
     )
@@ -651,17 +573,6 @@ if __name__ == "__main__":
 
     if args.info:
         cache_info(cache_dir)
-
-    elif args.synthetic:
-        markets = ["caiso", "ercot", "pjm"] if args.market == "all" \
-                  else [args.market]
-        for mkt in markets:
-            p, ts = make_synthetic_prices(mkt)
-            # save as parquet for consistency
-            df = pd.DataFrame({"timestamp": ts, "lmp": p.flatten()})
-            path = _cache_path(mkt, args.years, cache_dir)
-            _save_cache(df, path)
-            print(f"Synthetic {mkt.upper()}: {len(p):,} steps saved → {path}")
 
     elif args.market == "all":
         prices, ts = load_all_markets(

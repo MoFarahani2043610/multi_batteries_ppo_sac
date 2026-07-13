@@ -10,6 +10,12 @@ pytest suite verifying the StorageArbitrageEnv:
   - Heterogeneous fleet support
   - Edge cases (full battery, empty battery, zero action)
 
+Note on reward normalization (July 2026 fix): the environment now divides
+the training reward by N (number of batteries) to keep training stable as
+N grows — see storage_arbitrage_env.py. Tests below that check exact
+reward values for N>1 have been updated accordingly. info["cash_flow"] and
+info["cumulative_profit"] remain true, un-normalized dollar amounts.
+
 Run with:
     pytest tests/test_env.py -v
 """
@@ -213,6 +219,7 @@ class TestRewardFormula:
         # charge at full rate
         _, reward, _, _, info = env.step(np.array([0.5], dtype=np.float32))
         # expected cash flow: -price * power * dt = -40 * 0.5 * (5/60) ≈ -1.6667
+        # N=1, so reward normalization by N is a no-op here
         expected = -40.0 * 0.5 * (5 / 60)
         assert reward == pytest.approx(expected, rel=1e-4), (
             f"Charging reward {reward} ≠ expected {expected}"
@@ -234,6 +241,7 @@ class TestRewardFormula:
         env.reset(seed=0)
         _, reward, _, _, info = env.step(np.array([-0.5], dtype=np.float32))
         # expected: +price * power * dt = +40 * 0.5 * (5/60)
+        # N=1, so reward normalization by N is a no-op here
         expected = +40.0 * 0.5 * (5 / 60)
         assert reward == pytest.approx(expected, rel=1e-4)
         env.close()
@@ -270,7 +278,17 @@ class TestRewardFormula:
         env.close()
 
     def test_reward_multi_battery_additivity(self):
-        """Two identical batteries acting identically → reward = 2× single battery."""
+        """Two identical batteries acting identically -> same per-battery
+        reward as a single battery, since reward is normalized by N.
+
+        (Prior to the July 2026 reward-normalization fix, reward summed
+        cash flow across all N batteries without dividing by N, so r2 was
+        expected to equal 2*r1. That un-normalized behavior caused SAC's
+        critic/actor losses to blow up as N grew in the Milestone 3 sweep,
+        so reward is now divided by N -- see storage_arbitrage_env.py.
+        info["cash_flow"] still reports the true, un-normalized dollar
+        amount, so profit reporting is unaffected.)
+        """
         prices = np.full((300, 1), 30.0, dtype=np.float32)
         kwargs = dict(
             capacity_mwh=10.0, p_charge_max=0.5, p_discharge_max=0.5,
@@ -283,7 +301,7 @@ class TestRewardFormula:
             price_source=src1, degradation_penalty=0.0, normalize_obs=False,
         )
         env1.reset(seed=0)
-        _, r1, _, _, _ = env1.step(np.array([-0.3], dtype=np.float32))
+        _, r1, _, _, info1 = env1.step(np.array([-0.3], dtype=np.float32))
 
         # two identical batteries
         src2 = HistoricalPriceSource(prices.copy(), episode_len=288)
@@ -292,9 +310,14 @@ class TestRewardFormula:
             price_source=src2, degradation_penalty=0.0, normalize_obs=False,
         )
         env2.reset(seed=0)
-        _, r2, _, _, _ = env2.step(np.array([-0.3, -0.3], dtype=np.float32))
+        _, r2, _, _, info2 = env2.step(np.array([-0.3, -0.3], dtype=np.float32))
 
-        assert r2 == pytest.approx(2 * r1, rel=1e-5)
+        # Normalized reward: same per-battery reward regardless of N
+        assert r2 == pytest.approx(r1, rel=1e-5)
+        # True (un-normalized) cash flow still doubles, confirming the
+        # normalization happens only on the RL-facing reward, not on the
+        # real dollar accounting used for reporting/evaluation.
+        assert info2["cash_flow"] == pytest.approx(2 * info1["cash_flow"], rel=1e-5)
         env1.close(); env2.close()
 
 
@@ -421,9 +444,12 @@ class TestHistoricalPriceSource:
         action = np.array([-0.5, -0.5], dtype=np.float32)
         _, reward, _, _, info = env.step(action)
         # Battery 0 discharges at node 0 (price 30), battery 1 at node 1 (price 60)
-        # reward = 30*0.5*dt + 60*0.5*dt = (30+60)*0.5*(5/60)
-        expected = (30.0 + 60.0) * 0.5 * (5 / 60)
-        assert reward == pytest.approx(expected, rel=1e-4)
+        # true cash flow = 30*0.5*dt + 60*0.5*dt = (30+60)*0.5*(5/60)
+        # reward is normalized by N=2 batteries
+        expected_cash_flow = (30.0 + 60.0) * 0.5 * (5 / 60)
+        expected_reward = expected_cash_flow / 2
+        assert reward == pytest.approx(expected_reward, rel=1e-4)
+        assert info["cash_flow"] == pytest.approx(expected_cash_flow, rel=1e-4)
         env.close()
 
 

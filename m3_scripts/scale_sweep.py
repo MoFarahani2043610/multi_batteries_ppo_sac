@@ -17,6 +17,10 @@ Usage
 
     # Both algorithms in one command
     python m3_scripts/scale_sweep.py --all
+
+Note: this script always trains on real CAISO data. There is no synthetic
+fallback — config.env.price_source must be explicitly "caiso", or the
+script raises an error rather than silently substituting synthetic data.
 """
 
 from __future__ import annotations
@@ -51,32 +55,38 @@ def load_config(path: str) -> dict:
 def make_env_for_n(n: int, config: dict, seed: int):
     """Build StorageArbitrageEnv with heterogeneous fleet for given N.
 
-    Supports real CAISO data via config env.price_source = 'caiso'.
+    Always uses real CAISO data. There is no synthetic-data fallback:
+    config.env.price_source must be explicitly "caiso", or this raises
+    an error rather than silently substituting synthetic data.
     """
-    from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource, SyntheticPriceSource
+    from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource
     from make_heterogeneous_fleet import make_heterogeneous_fleet
 
     env_cfg      = config.get("env", {})
     fleet        = make_heterogeneous_fleet(n, seed=seed)
-    price_source = env_cfg.get("price_source", "synthetic").lower()
+    price_source = env_cfg.get("price_source", "").lower()
 
-    if price_source == "caiso":
-        _DATA = os.path.join(_ROOT, 'data')
-        if _DATA not in sys.path:
-            sys.path.insert(0, _DATA)
-        from loader import load_prices, make_features
-        prices, timestamps = load_prices(
-            market    = "caiso",
-            cache_dir = os.path.join(_ROOT, "cache"),
+    if price_source != "caiso":
+        raise ValueError(
+            f"config.env.price_source must be 'caiso', got {price_source!r}. "
+            "Synthetic data is no longer supported — set price_source: caiso "
+            "in the YAML config."
         )
-        features = make_features(timestamps)
-        source   = HistoricalPriceSource(
-            prices      = prices,
-            features    = features,
-            episode_len = 288,
-        )
-    else:
-        source = SyntheticPriceSource()
+
+    _DATA = os.path.join(_ROOT, 'data')
+    if _DATA not in sys.path:
+        sys.path.insert(0, _DATA)
+    from loader import load_prices, make_features
+    prices, timestamps = load_prices(
+        market    = "caiso",
+        cache_dir = os.path.join(_ROOT, "cache"),
+    )
+    features = make_features(timestamps)
+    source   = HistoricalPriceSource(
+        prices      = prices,
+        features    = features,
+        episode_len = 288,
+    )
 
     return StorageArbitrageEnv(
         batteries           = fleet,

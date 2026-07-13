@@ -7,7 +7,18 @@ Implements the MDP from Section 3:
   State   : s_t = [R_t, p_t, f_t]
   Action  : a_t ∈ R^N  (positive = charge, negative = discharge)
   Transition: R_{t+1,i} = clip(R_{t,i} + η_i · a_{t,i} · Δt, 0, R_max,i)
-  Reward  : r_t = Σ_i [ -p_{t,k(i)} · a_{t,i} · Δt - λ · |a_{t,i}| ]
+  Reward  : r_t = (1/N) · Σ_i [ -p_{t,k(i)} · a_{t,i} · Δt - λ · |a_{t,i}| ]
+
+Note on reward normalization (fix, July 2026): the reward fed to the RL
+agent is divided by N (number of batteries). Without this, total cash
+flow scales roughly linearly with N, causing SAC's critic loss and
+actor loss to grow by orders of magnitude as N increases, which produced
+severe training instability at N≥2 in the Milestone 3 sweep. Dividing
+by N keeps rewards on a comparable scale across all N, restoring
+training stability. Real dollar profit is unaffected: `cash_flow` and
+`cumulative_profit` in the info dict remain the true, un-normalized
+dollar amounts, so evaluation/reporting is unchanged. Since dividing by
+N=1 is a no-op, all previously obtained N=1 results remain valid.
 
 Usage
 -----
@@ -342,7 +353,12 @@ class StorageArbitrageEnv(gym.Env):
 
     Reward
     ------
-    r_t = Σ_i [ -p_{t,k(i)} · a_{t,i} · Δt - λ · |a_{t,i}| ]
+    r_t = (1/N) · Σ_i [ -p_{t,k(i)} · a_{t,i} · Δt - λ · |a_{t,i}| ]
+
+    The reward is normalized by N (see module docstring) so training
+    remains stable as the number of batteries grows. Real dollar profit
+    (info["cash_flow"], info["cumulative_profit"]) is unaffected and
+    reflects true un-normalized $ amounts.
 
     Sign convention: charging costs money (negative reward at positive prices),
     discharging earns money (positive reward at positive prices). The agent
@@ -352,11 +368,11 @@ class StorageArbitrageEnv(gym.Env):
     -------------------------------------------
     soc_mwh          : np.ndarray (N,)  — absolute SoC in MWh
     prices           : np.ndarray (M,)  — raw prices in $/MWh
-    cash_flow        : float            — revenue component of reward
-    degradation_cost : float            — penalty component of reward
+    cash_flow        : float            — revenue component of reward (true $, NOT divided by N)
+    degradation_cost : float            — penalty component of reward (true $, NOT divided by N)
     actions_clipped  : bool             — whether any action was clipped
     step_idx         : int              — current timestep within episode
-    cumulative_profit: float            — total profit so far this episode
+    cumulative_profit: float            — total profit so far this episode (true $)
     """
 
     metadata = {"render_modes": []}
@@ -537,8 +553,14 @@ class StorageArbitrageEnv(gym.Env):
             # degradation penalty
             degradation_cost += self.lam * abs(a_i)
 
-        reward = cash_flow - degradation_cost
+        # true, un-normalized dollar reward (used for info/reporting)
+        true_reward = cash_flow - degradation_cost
         self._cumulative_profit += cash_flow  # track gross profit separately
+
+        # reward fed to the agent is normalized by N to keep training
+        # stable as the number of batteries grows (see module docstring
+        # and class docstring "Reward" section). No-op when N=1.
+        reward = true_reward / self.N
 
         # count SoC saturation events
         if soc_saturated:

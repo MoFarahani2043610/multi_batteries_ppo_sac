@@ -1,0 +1,44 @@
+# m3_configs/sac_scaling_lr_test.yaml
+# ============================
+# TEST CONFIG — reduced learning rate to check if it fixes the
+# oscillation/degradation seen after ~150-200k steps in the original run.
+# Only change from sac_scaling.yaml: learning_rate 1e-3 -> 3e-4
+
+algo: sac
+
+env:
+  n_batteries: 1
+  dt_hours: 0.08333
+  degradation_penalty: 0.0
+  normalize_obs: true
+  price_ref: 52.0
+  price_source: caiso
+  caiso_path: cache/caiso_2024_2026_5min.parquet
+
+training:
+  total_timesteps: 1000000
+  n_seeds: 5
+  eval_freq: 10000
+  eval_episodes: 10
+  log_interval: 5
+
+sac:
+  learning_rate: 0.0003       # TEST: reduced from 0.001
+  buffer_size: 500000
+  learning_starts: 1000
+  batch_size: 256
+  tau: 0.005
+  gamma: 0.99
+  train_freq: 1
+  gradient_steps: 1
+  ent_coef: auto
+  target_entropy: auto
+  policy: MlpPolicy
+  policy_kwargs:
+    net_arch: [400, 300]
+
+logging:
+  log_dir: m3_logs/sac_lr_test
+  tensorboard: true
+  save_freq: 100000
+  verbose: 1
