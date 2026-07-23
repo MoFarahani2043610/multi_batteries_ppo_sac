@@ -21,6 +21,13 @@ Why it might struggle at scale (N→20):
   - The replay buffer grows with experience but memory is fixed.
   - Entropy regularisation may become harder to tune as action dim grows.
 
+Learning rate schedule (added July 2026): a constant learning rate was found
+to produce oscillation / non-improvement in the second half of training
+(after ~150-300k of 1M steps). config.sac.lr_schedule: "linear" enables a
+linear decay from the configured learning_rate down to ~0 over training,
+which is standard practice for this failure mode. Default remains constant
+if lr_schedule is unset, preserving prior behavior.
+
 Usage
 -----
     from m2_agents.sac import SACAgent
@@ -84,10 +91,23 @@ class SACAgent:
         # ── build model ───────────────────────────────────────────────
         tb_log = str(log_dir.parent) if self.log_cfg.get("tensorboard", True) else None
 
+        # ── learning rate: fixed float or linear decay schedule ────────
+        lr_value = float(self.cfg.get("learning_rate", 3e-4))
+        lr_schedule = self.cfg.get("lr_schedule", "constant")
+        if lr_schedule == "linear":
+            # Linearly decay from lr_value down to ~0 over training.
+            # SB3 calls this with progress_remaining going from 1.0 (start)
+            # to 0.0 (end of training).
+            def _linear_lr(progress_remaining: float, _lr0: float = lr_value):
+                return progress_remaining * _lr0
+            learning_rate_arg = _linear_lr
+        else:
+            learning_rate_arg = lr_value
+
         self.model = SAC(
             policy         = self.cfg.get("policy", "MlpPolicy"),
             env            = self.monitored_env,
-            learning_rate  = float(self.cfg.get("learning_rate", 3e-4)),
+            learning_rate  = learning_rate_arg,
             buffer_size    = int(self.cfg.get("buffer_size", 100_000)),
             learning_starts= int(self.cfg.get("learning_starts", 5_000)),
             batch_size     = int(self.cfg.get("batch_size", 256)),
@@ -212,30 +232,39 @@ class SACAgent:
         print(f"Loaded SAC model from {path}")
 
     def _make_fresh_env(self):
-        """Create a fresh env instance with the same config and price source."""
-        from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource, SyntheticPriceSource
-        env_cfg      = self.config.get("env", {})
-        price_source = env_cfg.get("price_source", "synthetic").lower()
+        """Create a fresh env instance with the same config and price source.
 
-        if price_source == "caiso":
-            import sys, os
-            _ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-            _DATA = os.path.join(_ROOT, 'data')
-            if _DATA not in sys.path:
-                sys.path.insert(0, _DATA)
-            from loader import load_prices, make_features
-            prices, timestamps = load_prices(
-                market    = "caiso",
-                cache_dir = os.path.join(_ROOT, "cache"),
+        Always uses real CAISO data. There is no synthetic-data fallback:
+        config.env.price_source must be explicitly "caiso", or this raises
+        an error rather than silently substituting synthetic data.
+        """
+        from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource
+        env_cfg      = self.config.get("env", {})
+        price_source = env_cfg.get("price_source", "").lower()
+
+        if price_source != "caiso":
+            raise ValueError(
+                f"config.env.price_source must be 'caiso', got {price_source!r}. "
+                "Synthetic data is no longer supported — set price_source: caiso "
+                "in the YAML config."
             )
-            features = make_features(timestamps)
-            source   = HistoricalPriceSource(
-                prices      = prices,
-                features    = features,
-                episode_len = 288,
-            )
-        else:
-            source = SyntheticPriceSource()
+
+        import sys, os
+        _ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+        _DATA = os.path.join(_ROOT, 'data')
+        if _DATA not in sys.path:
+            sys.path.insert(0, _DATA)
+        from loader import load_prices, make_features
+        prices, timestamps = load_prices(
+            market    = "caiso",
+            cache_dir = os.path.join(_ROOT, "cache"),
+        )
+        features = make_features(timestamps)
+        source   = HistoricalPriceSource(
+            prices      = prices,
+            features    = features,
+            episode_len = 288,
+        )
 
         return StorageArbitrageEnv(
             n_batteries         = int(env_cfg.get("n_batteries", 1)),
@@ -258,24 +287,33 @@ def load_sac_config(path: str = "m2_configs/sac_n1.yaml") -> dict:
 
 
 def make_sac_agent(config_path: str, seed: int = 0) -> SACAgent:
-    """One-liner: load config + build agent."""
-    from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource, SyntheticPriceSource
+    """One-liner: load config + build agent.
+
+    Always uses real CAISO data. There is no synthetic-data fallback:
+    config.env.price_source must be explicitly "caiso", or this raises
+    an error rather than silently substituting synthetic data.
+    """
+    from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource
     config       = load_sac_config(config_path)
     env_cfg      = config.get("env", {})
-    price_source = env_cfg.get("price_source", "synthetic").lower()
+    price_source = env_cfg.get("price_source", "").lower()
 
-    if price_source == "caiso":
-        import os, sys
-        _ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-        _DATA = os.path.join(_ROOT, 'data')
-        if _DATA not in sys.path:
-            sys.path.insert(0, _DATA)
-        from loader import load_prices, make_features
-        prices, timestamps = load_prices(market="caiso", cache_dir=os.path.join(_ROOT, "cache"))
-        features = make_features(timestamps)
-        source   = HistoricalPriceSource(prices=prices, features=features, episode_len=288)
-    else:
-        source = SyntheticPriceSource()
+    if price_source != "caiso":
+        raise ValueError(
+            f"config.env.price_source must be 'caiso', got {price_source!r}. "
+            "Synthetic data is no longer supported — set price_source: caiso "
+            "in the YAML config."
+        )
+
+    import os, sys
+    _ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+    _DATA = os.path.join(_ROOT, 'data')
+    if _DATA not in sys.path:
+        sys.path.insert(0, _DATA)
+    from loader import load_prices, make_features
+    prices, timestamps = load_prices(market="caiso", cache_dir=os.path.join(_ROOT, "cache"))
+    features = make_features(timestamps)
+    source   = HistoricalPriceSource(prices=prices, features=features, episode_len=288)
 
     env = StorageArbitrageEnv(
         n_batteries         = int(env_cfg.get("n_batteries", 1)),
