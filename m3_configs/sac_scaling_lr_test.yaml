@@ -1,15 +1,13 @@
-# m3_configs/sac_scaling_n20_stability_test.yaml
+# m3_configs/sac_n1_shallow_test.yaml
 # ============================
-# TEST CONFIG — combined critic-stability fixes for N=20, based on
-# external advice: reduce tau (slower target updates), increase batch_size
-# (lower critic-update variance), delay learning_starts (more diverse
-# replay buffer before training begins). ent_coef stays 'auto' since a
-# fixed value was already ruled out as a fix.
+# TEST CONFIG — shallower network architecture for N=1, per Danial's
+# suggestion, to check whether it improves the plateau/oscillation
+# behavior observed with the [400,300] network.
 
 algo: sac
 
 env:
-  n_batteries: 20
+  n_batteries: 1
   dt_hours: 0.08333
   degradation_penalty: 0.0
   normalize_obs: true
@@ -19,17 +17,17 @@ env:
 
 training:
   total_timesteps: 1000000
-  n_seeds: 1          # testing seed 0 first
+  n_seeds: 1          # testing seed 0 first, for direct comparison
   eval_freq: 10000
   eval_episodes: 10
   log_interval: 5
 
 sac:
-  learning_rate: 0.001        # back to original value — low LR alone didn't fix it
+  learning_rate: 0.001
   buffer_size: 500000
-  learning_starts: 5000       # TEST: delayed from 1000 -> 5000
-  batch_size: 512              # TEST: increased from 256 -> 512
-  tau: 0.001                   # TEST: reduced from 0.005 -> 0.001 (slower target updates)
+  learning_starts: 1000
+  batch_size: 256
+  tau: 0.005
   gamma: 0.99
   train_freq: 1
   gradient_steps: 1
@@ -37,10 +35,10 @@ sac:
   target_entropy: auto
   policy: MlpPolicy
   policy_kwargs:
-    net_arch: [400, 300]
+    net_arch: [128, 128]   # TEST: reduced from [400, 300]
 
 logging:
-  log_dir: m3_logs/sac_n20_stability_test
+  log_dir: m3_logs/sac_n1_shallow_test
   tensorboard: true
   save_freq: 100000
   verbose: 1
