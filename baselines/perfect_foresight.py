@@ -30,7 +30,7 @@ For each battery i and timestep t:
     SoC_{t+1,i} = SoC_{t,i}
                 + η_chg,i  · charge_{t,i}    · Δt      ← energy stored
                 − (1/η_dis,i) · discharge_{t,i} · Δt   ← energy released
-    0 ≤ SoC_{t,i}        ≤ R_max,i
+    0 ≤ SoC_{t,i}        ≤ C_max,i
     0 ≤ charge_{t,i}     ≤ P_chg_max,i
     0 ≤ discharge_{t,i}  ≤ P_dis_max,i
 

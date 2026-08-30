@@ -181,8 +181,8 @@ class TestPhysicalConstraints:
         for _ in range(50):
             _, _, term, trunc, info = env_het.step(env_het.action_space.sample())
             for i, b in enumerate(env_het.batteries):
-                assert info["soc_mwh"][i] >= b.r_min - 1e-9
-                assert info["soc_mwh"][i] <= b.r_max + 1e-9
+                assert info["soc_mwh"][i] >= b.soc_min_mwh - 1e-9
+                assert info["soc_mwh"][i] <= b.soc_max_mwh + 1e-9
             if term or trunc:
                 break
 
@@ -191,8 +191,8 @@ class TestPhysicalConstraints:
         for _ in range(100):
             _, _, term, trunc, info = env5.step(env5.action_space.sample())
             for i, b in enumerate(env5.batteries):
-                assert info["soc_mwh"][i] >= b.r_min - 1e-9
-                assert info["soc_mwh"][i] <= b.r_max + 1e-9
+                assert info["soc_mwh"][i] >= b.soc_min_mwh - 1e-9
+                assert info["soc_mwh"][i] <= b.soc_max_mwh + 1e-9
             if term or trunc:
                 break
 

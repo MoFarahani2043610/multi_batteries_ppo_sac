@@ -4,9 +4,9 @@ env/storage_arbitrage_env.py
 Gymnasium-compatible multi-battery energy storage arbitrage environment.
 
 Implements the MDP from Section 3:
-  State   : s_t = [R_t, p_t, f_t]
+  State   : s_t = [SoC_t, p_t, f_t]
   Action  : a_t ∈ R^N  (positive = charge, negative = discharge)
-  Transition: R_{t+1,i} = clip(R_{t,i} + η_i · a_{t,i} · Δt, 0, R_max,i)
+  Transition: SoC_{t+1,i} = clip(SoC_{t,i} + η_i · a_{t,i} · Δt, 0, C_max,i)
   Reward  : r_t = (1/N) · Σ_i [ -p_{t,k(i)} · a_{t,i} · Δt - λ · |a_{t,i}| ]
 
 Note on reward normalization (fix, July 2026): the reward fed to the RL
@@ -54,7 +54,7 @@ class BatteryConfig:
     Parameters
     ----------
     capacity_mwh : float
-        Maximum energy that can be stored (R_max,i). Default 1.0 MWh.
+        Maximum energy that can be stored (C_max,i). Default 1.0 MWh.
     p_charge_max : float
         Maximum charging power in MW (positive bound on a_t,i). Default 0.5 MW.
     p_discharge_max : float
@@ -94,12 +94,12 @@ class BatteryConfig:
                 "initial_soc outside [soc_min, soc_max]"
 
     @property
-    def r_min(self) -> float:
+    def soc_min_mwh(self) -> float:
         """Absolute minimum SoC in MWh."""
         return self.soc_min * self.capacity_mwh
 
     @property
-    def r_max(self) -> float:
+    def soc_max_mwh(self) -> float:
         """Absolute maximum SoC in MWh."""
         return self.soc_max * self.capacity_mwh
 
@@ -343,7 +343,7 @@ class StorageArbitrageEnv(gym.Env):
     Observation space
     -----------------
     Box of shape (N + M + D,):
-        [R_t/R_max (N),  p_t/price_ref (M),  f_t (D)]
+        [SoC_t/C_max (N),  p_t/price_ref (M),  f_t (D)]
 
     Action space
     ------------
@@ -435,7 +435,7 @@ class StorageArbitrageEnv(gym.Env):
             obs_high[:self.N] = 1.0          # normalised SoC in [0, 1]
         else:
             obs_low[:self.N] = 0.0
-            obs_high[:self.N] = np.array([b.r_max for b in self.batteries])
+            obs_high[:self.N] = np.array([b.soc_max_mwh for b in self.batteries])
 
         # --- Price segment ---
         # Normalized price = raw_price / price_ref. Real CAISO data used in
@@ -467,6 +467,10 @@ class StorageArbitrageEnv(gym.Env):
         self._episode_done = False
 
         # --- constraint violation counters (Milestone 3 metrics) ---
+        # NOTE: these counters are purely DIAGNOSTIC. They do NOT enter
+        # the reward function. The agent receives no explicit penalty for
+        # SoC saturation or power-limit hits; it only faces the indirect
+        # consequence of its action being clipped.
         # SoC saturation: timesteps where SoC clip() was active
         self._soc_saturation_events = 0
         # Power-limit hits: timesteps where action exceeded Pmax or Pdis_max
@@ -554,8 +558,8 @@ class StorageArbitrageEnv(gym.Env):
             unconstrained_soc = self._soc[i] + delta_energy
             new_soc = np.clip(
                 unconstrained_soc,
-                b.r_min,
-                b.r_max,
+                b.soc_min_mwh,
+                b.soc_max_mwh,
             )
 
             # detect SoC saturation: clip actually changed the value
