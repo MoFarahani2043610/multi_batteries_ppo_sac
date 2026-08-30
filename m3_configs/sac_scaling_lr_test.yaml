@@ -1,8 +1,6 @@
-# m3_configs/sac_n1_shallow_test.yaml
-# ============================
-# TEST CONFIG — shallower network architecture for N=1, per Danial's
-# suggestion, to check whether it improves the plateau/oscillation
-# behavior observed with the [400,300] network.
+# TEST CONFIG — single hidden layer [256] for N=1, completing the depth
+# spectrum: 1 layer (this test) vs 2 layers ([400,300] original,
+# [128,128] shallow-width) vs 3 layers ([256,256,128]).
 
 algo: sac
 
@@ -17,7 +15,7 @@ env:
 
 training:
   total_timesteps: 1000000
-  n_seeds: 1          # testing seed 0 first, for direct comparison
+  n_seeds: 1
   eval_freq: 10000
   eval_episodes: 10
   log_interval: 5
@@ -35,10 +33,10 @@ sac:
   target_entropy: auto
   policy: MlpPolicy
   policy_kwargs:
-    net_arch: [128, 128]   # TEST: reduced from [400, 300]
+    net_arch: [256]   # TEST: single hidden layer
 
 logging:
-  log_dir: m3_logs/sac_n1_shallow_test
+  log_dir: m3_logs/sac_n1_singlelayer_test
   tensorboard: true
   save_freq: 100000
   verbose: 1

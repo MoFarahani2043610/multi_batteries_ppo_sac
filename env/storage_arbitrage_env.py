@@ -421,16 +421,41 @@ class StorageArbitrageEnv(gym.Env):
         act_high = np.array([b.p_charge_max for b in self.batteries], dtype=np.float32)
         self.action_space = spaces.Box(act_low, act_high, dtype=np.float32)
 
-        # observation: [SoC (N), prices (M), features (D)]
+                # observation: [SoC (N), prices (M), features (D)]
+        # Bounds are set explicitly for every segment (SoC, price, time
+        # features) rather than left at +/-inf, since all three have
+        # known, finite ranges in this environment.
         obs_dim = self.N + self.M + self.D
-        obs_low = np.full(obs_dim, -np.inf, dtype=np.float32)
-        obs_high = np.full(obs_dim, np.inf, dtype=np.float32)
+        obs_low = np.zeros(obs_dim, dtype=np.float32)
+        obs_high = np.zeros(obs_dim, dtype=np.float32)
+
+        # --- SoC segment ---
         if normalize_obs:
             obs_low[:self.N] = 0.0
-            obs_high[:self.N] = 1.0          # normalised SoC ∈ [0, 1]
+            obs_high[:self.N] = 1.0          # normalised SoC in [0, 1]
         else:
             obs_low[:self.N] = 0.0
             obs_high[:self.N] = np.array([b.r_max for b in self.batteries])
+
+        # --- Price segment ---
+        # Normalized price = raw_price / price_ref. Real CAISO data used in
+        # this thesis ranges roughly [-$47.56, $152.65] with price_ref=52.0,
+        # giving normalized price roughly in [-1, 3]; a slightly wider
+        # bound [-3, 6] is used to allow headroom for other markets/periods
+        # without falling back to +/-inf.
+        if normalize_obs:
+            obs_low[self.N:self.N + self.M] = -3.0
+            obs_high[self.N:self.N + self.M] = 6.0
+        else:
+            obs_low[self.N:self.N + self.M] = -500.0
+            obs_high[self.N:self.N + self.M] = 10_000.0
+
+        # --- Time-feature segment ---
+        # sin/cos time-of-day encoding is always in [-1, 1] by construction.
+        if self.D > 0:
+            obs_low[self.N + self.M:] = -1.0
+            obs_high[self.N + self.M:] = 1.0
+
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
 
         # --- internal state ---
