@@ -1,0 +1,63 @@
+"""
+Download real CAISO data using gridstatus (Danial's exact method), and
+compare it directly against the existing cached file for the same date
+range, to definitively determine whether the cache is genuine.
+"""
+import gridstatus
+import pandas as pd
+import numpy as np
+
+print("Downloading real CAISO data via gridstatus...")
+df_real = gridstatus.CAISO().get_lmp(
+    start="2023-06-20", end="2024-01-01",
+    market="REAL_TIME_5_MIN", locations=["TH_NP15_GEN-APND"]
+)
+df_real.to_csv("real_data_check/caiso_gridstatus_raw.csv", index=False)
+print(f"Downloaded shape: {df_real.shape}")
+print(f"Columns: {list(df_real.columns)}")
+print(df_real.head())
+
+# ── Load the cached file for the same date range ─────────────────
+CACHE_PATH = "cache/caiso_2024_2026_5min.parquet"
+df_cache = pd.read_parquet(CACHE_PATH)
+df_cache['timestamp'] = pd.to_datetime(df_cache['timestamp'])
+
+# Find the timestamp column in the real download
+ts_col = None
+for candidate in ['Interval Start', 'Time', 'time', 'timestamp']:
+    if candidate in df_real.columns:
+        ts_col = candidate
+        break
+print(f"\nUsing '{ts_col}' as timestamp column in real download")
+
+df_real['ts'] = pd.to_datetime(df_real[ts_col])
+if df_real['ts'].dt.tz is not None:
+    df_real['ts'] = df_real['ts'].dt.tz_convert('UTC').dt.tz_localize(None)
+
+price_col = None
+for candidate in ['LMP', 'lmp', 'Price']:
+    if candidate in df_real.columns:
+        price_col = candidate
+        break
+print(f"Using '{price_col}' as price column in real download")
+
+# ── Restrict cache to the same window and merge on timestamp ─────
+mask = (df_cache['timestamp'] >= df_real['ts'].min()) & (df_cache['timestamp'] <= df_real['ts'].max())
+df_cache_window = df_cache[mask][['timestamp', 'lmp']].rename(columns={'lmp': 'cached_lmp'})
+
+df_real_slim = df_real[['ts', price_col]].rename(columns={'ts': 'timestamp', price_col: 'real_lmp'})
+
+merged = pd.merge(df_cache_window, df_real_slim, on='timestamp', how='inner')
+print(f"\nMatched {len(merged)} timestamps between cache and real download")
+
+if len(merged) > 0:
+    diff = (merged['cached_lmp'] - merged['real_lmp']).abs()
+    corr = merged['cached_lmp'].corr(merged['real_lmp'])
+    print(f"\nCorrelation (cached vs. real downloaded): {corr:.4f}")
+    print(f"Mean absolute difference: ${diff.mean():.2f}/MWh")
+    print(f"Max absolute difference: ${diff.max():.2f}/MWh")
+    print(f"Exact matches (diff < $0.01): {(diff < 0.01).mean()*100:.1f}%")
+    print("\nSample comparison (first 10 matched rows):")
+    print(merged.head(10).to_string())
+else:
+    print("\nWARNING: No matching timestamps found -- check timezone/column alignment.")

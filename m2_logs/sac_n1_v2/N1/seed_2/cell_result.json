@@ -1,0 +1,16 @@
+{
+  "algo": "sac",
+  "n_batteries": 1,
+  "seed": 2,
+  "mean_return": 29.512502549753986,
+  "std_return": 22.216291818362592,
+  "min_return": 2.834960855894382,
+  "max_return": 102.3218959124864,
+  "lp_return": 70.5722557560225,
+  "lp_fraction": 0.41818845428127677,
+  "train_time": 24610.039137499996,
+  "log_dir": "m2_logs\\sac_n1_v2\\N1\\seed_2",
+  "violation_rate": 0.6387152777777778,
+  "soc_saturation_rate": 0.6387152777777778,
+  "power_limit_rate": 0.0
+}

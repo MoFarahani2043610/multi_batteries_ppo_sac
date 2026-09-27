@@ -5,7 +5,7 @@ env:
   dt_hours: 0.08333
   degradation_penalty: 0.0
   normalize_obs: true
-  price_ref: 52.0          # real CAISO mean price $/MWh
+  price_ref: 35.28          # real CAISO mean price $/MWh
   price_source: caiso      # use real CAISO data via loader.py
   caiso_path: cache/caiso_2024_2026_5min.parquet
 
@@ -35,7 +35,7 @@ ppo:
       vf: [256, 256]
 
 logging:
-  log_dir: m2_logs/ppo_n1
+  log_dir: m2_logs/ppo_n1_v2
   tensorboard: true
   save_freq: 50000
   verbose: 1

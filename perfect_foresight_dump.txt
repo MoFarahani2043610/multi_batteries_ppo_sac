@@ -1,4 +1,4 @@
-import sys, os
+﻿import sys, os
 sys.path.insert(0, r'D:\Project 2026\env\env')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 """
@@ -17,7 +17,7 @@ Install
 -------
     pip install cvxpy
 
-LP formulationparquet
+LP formulation
 --------------
 For each battery i and timestep t:
 

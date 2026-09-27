@@ -1,0 +1,16 @@
+{
+  "algo": "ppo",
+  "n_batteries": 1,
+  "seed": 1,
+  "mean_return": 22.80359941199805,
+  "std_return": 26.68945887605491,
+  "min_return": -19.017234610817013,
+  "max_return": 93.71321733978881,
+  "lp_return": 84.3276409581489,
+  "lp_fraction": 0.27041666472462195,
+  "train_time": 3897.054086600001,
+  "log_dir": "m2_logs\\ppo_n1_v2\\N1\\seed_1",
+  "violation_rate": 0.68125,
+  "soc_saturation_rate": 0.68125,
+  "power_limit_rate": 0.0
+}
