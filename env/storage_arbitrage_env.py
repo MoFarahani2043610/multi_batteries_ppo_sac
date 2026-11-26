@@ -615,7 +615,7 @@ class StorageArbitrageEnv(gym.Env):
         return obs, float(reward), terminated, truncated, info
 
     def render(self):
-        # For full rendering support, use notebooks/01_env_walkthrough.ipynb
+        # Rendering is not implemented; plot episodes from the info dicts returned by step().
         warnings.warn("render() is not implemented. Use the walkthrough notebook.")
 
     def close(self):
