@@ -215,7 +215,7 @@ class PPOAgent:
         """Create a fresh env instance with the same config and price source."""
         from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource, SyntheticPriceSource
         env_cfg      = self.config.get("env", {})
-        price_source = env_cfg.get("price_source", "synthetic").lower()
+        price_source = env_cfg.get("price_source", "caiso").lower()
 
         if price_source == "caiso":
             import sys, os
@@ -242,7 +242,7 @@ class PPOAgent:
             dt_hours            = float(env_cfg.get("dt_hours", 5/60)),
             degradation_penalty = float(env_cfg.get("degradation_penalty", 0.0)),
             normalize_obs       = bool(env_cfg.get("normalize_obs", True)),
-            price_ref           = float(env_cfg.get("price_ref", 52.0)),
+            price_ref           = float(env_cfg.get("price_ref", 35.28)),
             price_source        = source,
         )
 
@@ -260,7 +260,7 @@ def make_ppo_agent(config_path: str, seed: int = 0) -> PPOAgent:
     from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource, SyntheticPriceSource
     config       = load_ppo_config(config_path)
     env_cfg      = config.get("env", {})
-    price_source = env_cfg.get("price_source", "synthetic").lower()
+    price_source = env_cfg.get("price_source", "caiso").lower()
 
     if price_source == "caiso":
         import os
@@ -281,7 +281,7 @@ def make_ppo_agent(config_path: str, seed: int = 0) -> PPOAgent:
         dt_hours            = float(env_cfg.get("dt_hours", 5/60)),
         degradation_penalty = float(env_cfg.get("degradation_penalty", 0.0)),
         normalize_obs       = bool(env_cfg.get("normalize_obs", True)),
-        price_ref           = float(env_cfg.get("price_ref", 52.0)),
+        price_ref           = float(env_cfg.get("price_ref", 35.28)),
         price_source        = source,
     )
     return PPOAgent(env, config, seed=seed)

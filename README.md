@@ -26,3 +26,8 @@ Environment: N-battery arbitrage on real CAISO 5-minute prices (TH_NP15_GEN-APND
 ## Not in the repository
 Trained models, TensorBoard logs and the dataset (see `.gitignore`).
 
+
+## Notes
+- Split boundaries: the scripts split by calendar month using the time of the last timestamp (23:55), so boundaries fall at 23:55 on the 1st of the month (train to 1 Jul 2026, validation 2 Jul - 1 Aug, test 2 Aug - 23 Sep 2026).
+- Observation bounds: the normalized price bounds [-3, 6] are nominal and observations are not clipped; 245 of 216,288 steps (0.11%) lie outside (min -3.93, max 35.16, the genuine spike of 1240.46 USD/MWh).
+- Held-out test (Table 4.3 of the thesis): 	est_traintest_split.py (seed 1), _seed2.py, _seed4.py; seeds 0 and 3 were not run for this test.

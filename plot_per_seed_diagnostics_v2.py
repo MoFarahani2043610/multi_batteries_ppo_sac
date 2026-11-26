@@ -1,6 +1,6 @@
 """
 Regenerate the per-seed SAC N=1 diagnostics figure using the real-data
-M2 SAC logs (m2_logs/sac_n1_v2), replacing the old fraudulent-data version.
+M2 SAC logs (m2_logs/sac_n1_v2), replacing the old synthetic-data version.
 """
 import glob
 import numpy as np

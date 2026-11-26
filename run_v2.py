@@ -10,7 +10,7 @@ from loader import load_prices, make_features
 # FIX: previously this script created StorageArbitrageEnv(n_batteries=1)
 # with NO price_source specified, which silently defaults to
 # SyntheticPriceSource() -- meaning M1 baselines were being computed on
-# fake data even when a real cache file was in place. This version
+# synthetic data even when a real cache file was in place. This version
 # explicitly loads and uses the real CAISO data.
 
 def make_time_features_2dim(T):

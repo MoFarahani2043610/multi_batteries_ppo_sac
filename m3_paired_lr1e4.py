@@ -14,7 +14,7 @@ Only N values with at least 2 common fleets are tested. With 3 fleets the t-test
 sign-flip permutation p is 0.0625 (3 fleets: 0.25). The paired t-test is the main test.
 Bonferroni threshold over the 5 N values: 0.01.
 
-Run from D:\\Project 2026\\env:
+Run from <repo>:
     python m3_paired_lr1e4.py
 
 Output: m3_paired_lr1e4_summary.csv

@@ -1,5 +1,5 @@
 import sys, os
-sys.path.insert(0, r'D:\Project 2026\env\env')
+sys.path.insert(0, __import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)), '..', 'env'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 """
 baselines/perfect_foresight.py
@@ -48,7 +48,7 @@ import sys, os
 
 from storage_arbitrage_env import StorageArbitrageEnv
 
-sys.path.insert(0, r"D:\Project 2026\env\env")
+sys.path.insert(0, __import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)), '..', 'env'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np

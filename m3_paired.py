@@ -19,7 +19,7 @@ Note: with only 5 fleets the smallest possible two-sided sign-flip
 (permutation) p-value is 2/32 = 0.0625, so it can never be < 0.05. The paired
 t-test is the main test; the permutation p is printed as a check.
 
-Run from the project root (D:\\Project 2026\\env):
+Run from the project root (<repo>):
     python m3_paired.py
 
 Output: m3_paired_summary.csv

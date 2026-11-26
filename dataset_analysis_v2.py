@@ -1,14 +1,14 @@
 """
 Dataset description script for the thesis Environment & Data chapter.
 UPDATED to use the newly verified REAL CAISO data (Sept 2024 - Sept 2026),
-replacing the previous (confirmed fraudulent) cache file.
+replacing the previous (confirmed synthetic) cache file.
 """
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-CACHE_PATH = "cache/caiso_REAL_verified_2024_2026_5min.parquet"
+CACHE_PATH = "cache/caiso_2024_2026_5min.parquet"
 
 df = pd.read_parquet(CACHE_PATH)
 df['timestamp'] = pd.to_datetime(df['timestamp'])

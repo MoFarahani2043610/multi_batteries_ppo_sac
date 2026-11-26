@@ -1,7 +1,7 @@
 """
 Download the FULL real CAISO 5-min LMP dataset (Sept 2024 - Sept 2026) from
 CAISO's public OASIS API, in 2-day chunks, and save as the new, verified
-cache file, replacing the previous (fraudulent/wrong) cache file.
+cache file, replacing the previous (synthetic/wrong) cache file.
 """
 import requests
 import zipfile
@@ -91,5 +91,5 @@ expected_rows = expected_days * 288
 print(f"Expected rows for {expected_days} days: ~{expected_rows:,}")
 print(f"Missing rows: {expected_rows - len(df_all):,}")
 
-df_all.to_parquet("cache/caiso_REAL_verified_2024_2026_5min.parquet", index=False)
-print("\nSaved to: cache/caiso_REAL_verified_2024_2026_5min.parquet")
+df_all.to_parquet("cache/caiso_2024_2026_5min.parquet", index=False)
+print("\nSaved to: cache/caiso_2024_2026_5min.parquet")

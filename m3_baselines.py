@@ -12,7 +12,7 @@ Everything is reported in dollars PER BATTERY per 288-step episode, the same
 unit as the SAC/PPO eval returns (the env divides the reward by N). Fleet
 totals are saved too.
 
-Run from the project root (D:\\Project 2026\\env):
+Run from the project root (<repo>):
     python m3_baselines.py
     python m3_baselines.py --n-values 1 2 --seeds 0 1      (subset)
 
@@ -82,7 +82,7 @@ def build_env(n, seed, cfg, prices, features):
         dt_hours=float(env_cfg.get("dt_hours", 5 / 60)),
         degradation_penalty=float(env_cfg.get("degradation_penalty", 0.0)),
         normalize_obs=bool(env_cfg.get("normalize_obs", True)),
-        price_ref=float(env_cfg.get("price_ref", 52.0)),
+        price_ref=float(env_cfg.get("price_ref", 35.28)),
         price_source=source,
     )
 

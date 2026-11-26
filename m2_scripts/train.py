@@ -50,12 +50,12 @@ def make_env(config: dict):
     """Build the environment from the config dict.
 
     Supports two price sources via the config 'env.price_source' key:
-      - 'synthetic' (default) : SyntheticPriceSource — fast, no data needed
+      - 'synthetic' (unit tests only; not used for results) : SyntheticPriceSource — fast, no data needed
       - 'caiso'               : HistoricalPriceSource — real CAISO market data
     """
     from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource, SyntheticPriceSource
     env_cfg      = config.get("env", {})
-    price_source = env_cfg.get("price_source", "synthetic").lower()
+    price_source = env_cfg.get("price_source", "caiso").lower()
 
     if price_source == "caiso":
         # ── real CAISO data ──────────────────────────────────────────
@@ -82,7 +82,7 @@ def make_env(config: dict):
         print(f"  CAISO data loaded: {len(prices):,} timesteps, "
               f"mean=${prices.mean():.1f}/MWh")
     else:
-        # ── synthetic prices (default) ───────────────────────────────
+        # ── synthetic prices (unit tests only) ───────────────────────────────
         source = SyntheticPriceSource()
 
     return StorageArbitrageEnv(
@@ -90,7 +90,7 @@ def make_env(config: dict):
         dt_hours            = float(env_cfg.get("dt_hours", 5/60)),
         degradation_penalty = float(env_cfg.get("degradation_penalty", 0.0)),
         normalize_obs       = bool(env_cfg.get("normalize_obs", True)),
-        price_ref           = float(env_cfg.get("price_ref", 52.0)),
+        price_ref           = float(env_cfg.get("price_ref", 35.28)),
         price_source        = source,
     )
 

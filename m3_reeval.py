@@ -10,7 +10,7 @@ creates N identical default batteries, not the heterogeneous fleet used for
 training and for the LP/threshold baselines. This script fixes the comparison
 without retraining.
 
-Run from the project root (D:\\Project 2026\\env):
+Run from the project root (<repo>):
     python m3_reeval.py                  # PPO and SAC, whatever cells exist
     python m3_reeval.py --algo ppo
     python m3_reeval.py --list           # only list the models it finds

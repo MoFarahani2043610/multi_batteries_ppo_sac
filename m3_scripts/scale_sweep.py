@@ -93,7 +93,7 @@ def make_env_for_n(n: int, config: dict, seed: int):
         dt_hours            = float(env_cfg.get("dt_hours", 5/60)),
         degradation_penalty = float(env_cfg.get("degradation_penalty", 0.0)),
         normalize_obs       = bool(env_cfg.get("normalize_obs", True)),
-        price_ref           = float(env_cfg.get("price_ref", 52.0)),
+        price_ref           = float(env_cfg.get("price_ref", 35.28)),
         price_source        = source,
     )
 

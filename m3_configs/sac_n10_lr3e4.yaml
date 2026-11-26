@@ -26,9 +26,9 @@ training:
   log_interval: 5
 
 sac:
-  learning_rate: 0.0003        # tuned in M2
-  buffer_size: 500000         # tuned in M2
-  learning_starts: 1000       # tuned in M2
+  learning_rate: 0.0003        # lowered in M3 (M2 value: 0.001)
+  buffer_size: 500000         # M2 setting
+  learning_starts: 1000       # M2 setting
   batch_size: 256
   tau: 0.005
   gamma: 0.99
@@ -38,7 +38,7 @@ sac:
   target_entropy: auto        # = -N automatically in SB3
   policy: MlpPolicy
   policy_kwargs:
-    net_arch: [400, 300]      # tuned in M2
+    net_arch: [400, 300]      # M2 setting
 
 logging:
   log_dir: m3_logs/sac_n10_lr3e4

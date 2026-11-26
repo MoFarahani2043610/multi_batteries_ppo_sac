@@ -3,7 +3,7 @@ backfill_results_log.py — one-time script to seed results_log.csv with the
 runs we already completed on REAL CAISO data, before this logging system
 existed.
 
-Run this ONCE, from the project root (D:\\Project 2026\\env\\), after
+Run this ONCE, from the project root (<repo>), after
 dropping results_log.py next to it:
 
     python backfill_results_log.py
@@ -18,7 +18,7 @@ Runs deliberately NOT included (do not backfill, do not guess numbers for):
   - Architecture / depth experiments      -> never rerun on real data
   - Reward-coefficient experiments        -> never rerun on real data
   - M3 scalability sweep (N=2,5,10,20)    -> status unclear after the
-                                              data-fraud fix; re-verify
+                                              data correction; re-verify
                                               which cells, if any, actually
                                               ran on the REAL cache before
                                               logging them
@@ -104,7 +104,7 @@ for seed, (mean_ret, std_ret) in _richer_obs.items():
         total_timesteps=1_000_000, eval_episodes=10,
         eval_mean_return=mean_ret, eval_std_return=std_ret,
         notes="Richer-observation ablation, real CAISO data. Result: WORSE than "
-              "baseline SAC ($28.04) by ~23% -- reversed from the old fake-data finding.",
+              "baseline SAC ($28.04) by ~23% -- reversed from the old synthetic-data finding.",
     )
 
 # ── Train/test leakage verification (real data) ─────────────────────────

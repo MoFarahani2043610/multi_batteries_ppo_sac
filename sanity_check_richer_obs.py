@@ -13,7 +13,7 @@ from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource
 from loader import load_prices
 
 ROLLING_WINDOW = 12
-PRICE_REF = 52.0
+PRICE_REF = 35.28
 
 prices, timestamps = load_prices(market="caiso", cache_dir="cache")
 

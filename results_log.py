@@ -62,7 +62,7 @@ FIELDNAMES = [
     "dataset_path",
     "dataset_sha256_8",   # first 8 hex chars of the file's sha256 — enough to
                            # prove "same file" or "different file" without a
-                           # huge column; catches the exact fake/real-swap bug
+                           # huge column; catches the exact synthetic/real-swap bug
                            # that happened this project
     "config_path",
     "total_timesteps",

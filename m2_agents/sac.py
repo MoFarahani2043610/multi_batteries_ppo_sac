@@ -271,7 +271,7 @@ class SACAgent:
             dt_hours            = float(env_cfg.get("dt_hours", 5/60)),
             degradation_penalty = float(env_cfg.get("degradation_penalty", 0.0)),
             normalize_obs       = bool(env_cfg.get("normalize_obs", True)),
-            price_ref           = float(env_cfg.get("price_ref", 52.0)),
+            price_ref           = float(env_cfg.get("price_ref", 35.28)),
             price_source        = source,
         )
 
@@ -320,7 +320,7 @@ def make_sac_agent(config_path: str, seed: int = 0) -> SACAgent:
         dt_hours            = float(env_cfg.get("dt_hours", 5/60)),
         degradation_penalty = float(env_cfg.get("degradation_penalty", 0.0)),
         normalize_obs       = bool(env_cfg.get("normalize_obs", True)),
-        price_ref           = float(env_cfg.get("price_ref", 52.0)),
+        price_ref           = float(env_cfg.get("price_ref", 35.28)),
         price_source        = source,
     )
     return SACAgent(env, config, seed=seed)

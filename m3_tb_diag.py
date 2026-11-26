@@ -27,7 +27,7 @@ Several run folders can exist for one (N, seed) (restarted runs, e.g. N1 seeds
 0 and 4). The one that reaches the most training steps is used; the choice is
 printed.
 
-Run from the project root (D:\\Project 2026\\env):
+Run from the project root (<repo>):
     python m3_tb_diag.py
 Output:
     m3_tb_diag_runs.csv     one row per (algo, N, seed)

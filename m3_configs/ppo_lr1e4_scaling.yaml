@@ -23,7 +23,7 @@ training:
   log_interval: 1
 
 ppo:
-  learning_rate: 0.0001        # tuned in M2
+  learning_rate: 0.0001        # lowered in M3 (M2 value: 0.001)
   n_steps: 2048
   batch_size: 64
   n_epochs: 10
@@ -31,13 +31,13 @@ ppo:
   gae_lambda: 0.95
   clip_range: 0.2
   clip_range_vf: null
-  ent_coef: 0.001             # tuned in M2 — 0.05 causes collapse
+  ent_coef: 0.001             # M2 setting; 0.05 caused policy collapse
   vf_coef: 0.5
   max_grad_norm: 0.5
   policy: MlpPolicy
   policy_kwargs:
     net_arch:
-      pi: [400, 300]          # tuned in M2
+      pi: [400, 300]          # M2 setting
       vf: [400, 300]
 
 logging:

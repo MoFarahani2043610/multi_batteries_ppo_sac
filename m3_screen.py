@@ -14,7 +14,7 @@ Healthy means: critic loss below about 100 and |actor loss| below about 100
 (a whole episode earns about $30 per battery, so Q-values cannot be much
 larger than a few tens), with the reward rising.
 
-Run from the project root (D:\\Project 2026\\env):
+Run from the project root (<repo>):
     python m3_screen.py
 or with your own runs:
     python m3_screen.py label=folder label=folder ...

@@ -439,10 +439,10 @@ class StorageArbitrageEnv(gym.Env):
 
         # --- Price segment ---
         # Normalized price = raw_price / price_ref. Real CAISO data used in
-        # this thesis ranges roughly [-$47.56, $152.65] with price_ref=52.0,
-        # giving normalized price roughly in [-1, 3]; a slightly wider
-        # bound [-3, 6] is used to allow headroom for other markets/periods
-        # without falling back to +/-inf.
+        # this thesis ranges from -$138.60 to $1240.46 per MWh; with price_ref=35.28,
+        # the normalized price lies in [-3.93, 35.16]. The bounds [-3, 6] below are
+        # nominal: observations are NOT clipped to them (0.11% of the steps
+        # fall outside); they only avoid infinite bounds in the Box space.
         if normalize_obs:
             obs_low[self.N:self.N + self.M] = -3.0
             obs_high[self.N:self.N + self.M] = 6.0

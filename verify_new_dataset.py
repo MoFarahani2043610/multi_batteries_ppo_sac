@@ -1,14 +1,14 @@
 """
-Verify the newly downloaded cache/caiso_REAL_verified_2024_2026_5min.parquet
+Verify the newly downloaded cache/caiso_2024_2026_5min.parquet
 is genuine real market data: check basic statistics, autocorrelation
-structure, and compare against the old (fraudulent) cache file to confirm
+structure, and compare against the old (synthetic) cache file to confirm
 they are meaningfully different.
 """
 import pandas as pd
 import numpy as np
 
-NEW_PATH = "cache/caiso_REAL_verified_2024_2026_5min.parquet"
-OLD_PATH = "cache/caiso_2024_2026_5min.parquet"
+NEW_PATH = "cache/caiso_2024_2026_5min.parquet"
+OLD_PATH = "data/cache/caiso_2024_2026_5min.parquet"  # earlier synthetic cache (not in the repository)
 
 df_new = pd.read_parquet(NEW_PATH)
 df_new['timestamp'] = pd.to_datetime(df_new['timestamp'])
@@ -36,9 +36,9 @@ def lag_autocorr(x, lag):
 print(f"\nLag-1 (5-min) autocorrelation: {lag_autocorr(prices_new, 1):.4f}")
 print(f"Lag-288 (1-day) autocorrelation: {lag_autocorr(prices_new, 288):.4f}")
 
-# ── Compare against the OLD (fraudulent) cache for the SAME overlapping dates ──
+# ── Compare against the OLD (synthetic) cache for the SAME overlapping dates ──
 print("\n" + "="*60)
-print("COMPARISON AGAINST OLD (SUSPECT) CACHE FILE")
+print("COMPARISON AGAINST OLD (SYNTHETIC) CACHE FILE")
 print("="*60)
 try:
     df_old = pd.read_parquet(OLD_PATH)
@@ -56,9 +56,9 @@ try:
             corr = merged['lmp_new'].corr(merged['lmp_old'])
             diff = (merged['lmp_new'] - merged['lmp_old']).abs()
             print(f"Matched timestamps: {len(merged)}")
-            print(f"Correlation (new real vs old suspect): {corr:.4f}")
+            print(f"Correlation (new real vs old synthetic): {corr:.4f}")
             print(f"Mean abs difference: ${diff.mean():.2f}/MWh")
-            print("(Low correlation confirms the old cache was indeed different/fake)")
+            print("(Low correlation confirms the old cache was indeed different/synthetic)")
         else:
             print("No overlapping timestamps to compare directly.")
     else:

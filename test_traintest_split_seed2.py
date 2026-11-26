@@ -1,8 +1,8 @@
 """
 Test: SAC N=1, seed 2, with a genuinely separated train/test split.
-Training samples episodes ONLY from Jan 2022 - Sep 2023 (train window).
-Evaluation samples episodes ONLY from Nov-Dec 2023 (held-out test window).
-This directly tests whether current (leaked) results are inflated.
+Training samples episodes ONLY from 1 Sep 2024 - 1 Jul 2026 (train window).
+Evaluation samples episodes ONLY from 2 Aug - 23 Sep 2026 (held-out test window).
+This directly tests whether the in-sample results are inflated.
 """
 import sys, os
 sys.path.insert(0, 'env')
