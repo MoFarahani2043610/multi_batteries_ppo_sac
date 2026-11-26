@@ -1,9 +1,9 @@
 """
 plot_n5_long_diagnostics.py
 
-Same as plot_n5_diagnostics.py but pointed at the 1,000,000-step N=5 long
-training check instead of the 200K preliminary run, so we can see whether
-the reward curve was still climbing at the end or had flattened out again.
+Diagnostic plot for the 1,000,000-step SAC N=5 long training check:
+reward curve on top, critic/actor loss below, so we can see whether
+the reward curve was still climbing at the end or had flattened out.
 
 Run from project root:
     python plot_n5_long_diagnostics.py
