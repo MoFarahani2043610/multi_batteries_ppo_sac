@@ -224,7 +224,7 @@ def run_sweep(algo: str, config: dict, n_values: list, seeds: list, config_path:
             result = train_one_cell(algo, n, seed, config)
             all_results.append(result)
 
-            # --- results_log hook (added by patch_scale_sweep_logging.py) ---
+            # --- results_log hook ---
             try:
                 sys.path.insert(0, _ROOT)
                 from results_log import log_run

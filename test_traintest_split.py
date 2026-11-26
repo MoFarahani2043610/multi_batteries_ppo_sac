@@ -15,7 +15,7 @@ from storage_arbitrage_env import StorageArbitrageEnv, HistoricalPriceSource
 from loader import load_prices, make_features
 from m2_agents.sac import SACAgent
 
-# ── load full dataset + compute split boundaries (same as dataset_analysis.py) ──
+# ── load full dataset + compute split boundaries (calendar-month split, see README) ──
 prices, timestamps = load_prices(market="caiso", cache_dir="cache")
 features = make_features(timestamps)
 ts = pd.to_datetime(timestamps)
