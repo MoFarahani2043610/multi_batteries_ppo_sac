@@ -31,3 +31,5 @@ Trained models, TensorBoard logs and the dataset (see `.gitignore`).
 - Split boundaries: the scripts split by calendar month using the time of the last timestamp (23:55), so boundaries fall at 23:55 on the 1st of the month (train to 1 Jul 2026, validation 2 Jul - 1 Aug, test 2 Aug - 23 Sep 2026).
 - Observation bounds: the normalized price bounds [-3, 6] are nominal and observations are not clipped; 245 of 216,288 steps (0.11%) lie outside (min -3.93, max 35.16, the genuine spike of 1240.46 USD/MWh).
 - Held-out test (Table 4.3 of the thesis): 	est_traintest_split.py (seed 1), _seed2.py, _seed4.py; seeds 0 and 3 were not run for this test.
+
+- TensorBoard event files (m2_logs, m3_logs) are not in the repository because of size. The figures in the repository (figs_real/, plotting/, m3_tb_diag.png, sac_n5_long_diagnostics.png) were generated from them by the scripts of the same name. Final numbers come from m3_reeval.py (m3_reeval_episodes.csv).
