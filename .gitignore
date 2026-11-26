@@ -14,3 +14,5 @@ m3_logs/
 cache/
 m4_logs/
 .venv/
+
+data/cache/

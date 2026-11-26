@@ -5,7 +5,7 @@ Environment: N-battery arbitrage on real CAISO 5-minute prices (TH_NP15_GEN-APND
 
 ## Data
 - Real CAISO LMP, 2024-09-01 to 2026-09-23, 216,288 five-minute steps (751 of 753 days; the days 26-27 Nov 2024 are missing).
-- Download with `python download_full_real_caiso.py`; the file must be `cache/caiso_2024_2026_5min.parquet` (not committed).
+- The verified dataset is included as `cache/caiso_2024_2026_5min.parquet` (SHA-256 starts with 06bae5ea). It can be re-created with `python download_full_real_caiso.py`. Older commits (before 40bf327) contain a synthetic dataset that must not be used.
 - Split by index: train 192,095 steps (to 1 Jul 2026), validation 8,928 (2 Jul - 1 Aug), test 15,265 (2 Aug - 23 Sep 2026).
 - Note: an earlier synthetic cache was used in some early experiments. It was replaced by the real data (commit 40bf327). All results in the thesis come from the real data. All configs use `price_ref: 35.28`.
 
@@ -25,3 +25,4 @@ Environment: N-battery arbitrage on real CAISO 5-minute prices (TH_NP15_GEN-APND
 
 ## Not in the repository
 Trained models, TensorBoard logs and the dataset (see `.gitignore`).
+
