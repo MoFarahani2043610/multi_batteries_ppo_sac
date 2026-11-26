@@ -37,20 +37,20 @@ train_source = HistoricalPriceSource(train_prices, train_features, episode_len=2
 
 train_env = StorageArbitrageEnv(
     n_batteries=1, dt_hours=5/60, degradation_penalty=0.0,
-    normalize_obs=True, price_ref=52.0, price_source=train_source,
+    normalize_obs=True, price_ref=35.28, price_source=train_source,
 )
 
 # ── build config, train ───────────────────────────────────────────
 config = {
     "env": {"n_batteries": 1, "dt_hours": 5/60, "degradation_penalty": 0.0,
-            "normalize_obs": True, "price_ref": 52.0, "price_source": "caiso"},
+            "normalize_obs": True, "price_ref": 35.28, "price_source": "caiso"},
     "training": {"total_timesteps": 1_000_000, "eval_freq": 10_000,
                  "eval_episodes": 10, "log_interval": 5},
     "sac": {"learning_rate": 0.001, "buffer_size": 500_000, "learning_starts": 1_000,
             "batch_size": 256, "tau": 0.005, "gamma": 0.99, "train_freq": 1,
             "gradient_steps": 1, "ent_coef": "auto", "target_entropy": "auto",
             "policy": "MlpPolicy", "policy_kwargs": {"net_arch": [400, 300]}},
-    "logging": {"log_dir": "m3_logs/sac_n1_traintest_split_seed4", "tensorboard": True,
+    "logging": {"log_dir": "m3_logs/sac_n1_traintest_split_seed4_v2", "tensorboard": True,
                 "save_freq": 100_000, "verbose": 1},
 }
 
@@ -63,7 +63,7 @@ test_features = features[test_start_idx:]
 test_source = HistoricalPriceSource(test_prices, test_features, episode_len=288)
 test_env = StorageArbitrageEnv(
     n_batteries=1, dt_hours=5/60, degradation_penalty=0.0,
-    normalize_obs=True, price_ref=52.0, price_source=test_source,
+    normalize_obs=True, price_ref=35.28, price_source=test_source,
 )
 
 # manually evaluate on the TRUE held-out test window

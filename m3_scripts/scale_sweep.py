@@ -207,7 +207,7 @@ def train_one_cell(algo: str, n: int, seed: int, config: dict) -> dict:
     return result
 
 
-def run_sweep(algo: str, config: dict, n_values: list, seeds: list) -> list:
+def run_sweep(algo: str, config: dict, n_values: list, seeds: list, config_path: str = "") -> list:
     """Run the full sweep and return all cell results."""
     all_results = []
     total_cells = len(n_values) * len(seeds)
@@ -223,6 +223,27 @@ def run_sweep(algo: str, config: dict, n_values: list, seeds: list) -> list:
 
             result = train_one_cell(algo, n, seed, config)
             all_results.append(result)
+
+            # --- results_log hook (added by patch_scale_sweep_logging.py) ---
+            try:
+                sys.path.insert(0, _ROOT)
+                from results_log import log_run
+                log_run(
+                    algo=algo.upper(),
+                    n_batteries=n,
+                    seed=seed,
+                    dataset_path=config.get('env', {}).get('caiso_path', 'cache/caiso_2024_2026_5min.parquet'),
+                    config_path=config_path,
+                    total_timesteps=config.get('training', {}).get('total_timesteps'),
+                    eval_episodes=20,
+                    eval_mean_return=result['mean_return'],
+                    eval_std_return=result['std_return'],
+                    runtime_minutes=result['train_time'] / 60.0,
+                    status='COMPLETED',
+                    notes=f"M3 sweep cell, LP fraction={result['lp_fraction']*100:.1f}%",
+                )
+            except Exception as log_err:
+                print(f'  [WARN] results_log write failed: {log_err}')
 
     return all_results
 
@@ -292,11 +313,11 @@ if __name__ == "__main__":
         for algo, cfg_path in [("sac", "m3_configs/sac_scaling.yaml"),
                                 ("ppo", "m3_configs/ppo_scaling.yaml")]:
             config  = load_config(cfg_path)
-            results = run_sweep(algo, config, args.n_values, args.seeds)
+            results = run_sweep(algo, config, args.n_values, args.seeds, config_path=cfg_path)
             save_sweep_results(results, algo, config)
     else:
         if not args.algo or not args.config:
             parser.error("--algo and --config are required (or use --all)")
         config  = load_config(args.config)
-        results = run_sweep(args.algo, config, args.n_values, args.seeds)
+        results = run_sweep(args.algo, config, args.n_values, args.seeds, config_path=args.config)
         save_sweep_results(results, args.algo, config)

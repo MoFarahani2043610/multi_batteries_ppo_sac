@@ -55,7 +55,7 @@ dp[ROLLING_WINDOW:] = price_flat[ROLLING_WINDOW:] - price_flat[:-ROLLING_WINDOW]
 
 # Normalize the new features to a similar scale as the existing normalized
 # price feature (divide by price_ref, same convention as the price obs).
-PRICE_REF = 52.0
+PRICE_REF = 35.28
 p_bar_norm = (p_bar / PRICE_REF).astype(np.float32)
 dp_norm = (dp / PRICE_REF).astype(np.float32)
 

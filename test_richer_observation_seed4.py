@@ -27,7 +27,7 @@ from loader import load_prices
 from m2_agents.sac import SACAgent
 
 ROLLING_WINDOW = 12  # 12 steps x 5 min = 1 hour
-PRICE_REF = 52.0
+PRICE_REF = 35.28
 SEED = 4
 
 prices, timestamps = load_prices(market="caiso", cache_dir="cache")
@@ -75,7 +75,7 @@ config = {
             "batch_size": 256, "tau": 0.005, "gamma": 0.99, "train_freq": 1,
             "gradient_steps": 1, "ent_coef": "auto", "target_entropy": "auto",
             "policy": "MlpPolicy", "policy_kwargs": {"net_arch": [400, 300]}},
-    "logging": {"log_dir": "m3_logs/sac_n1_richer_obs_test_seed4", "tensorboard": True,
+    "logging": {"log_dir": "m3_logs/sac_n1_richer_obs_test_seed4_v2", "tensorboard": True,
                 "save_freq": 100_000, "verbose": 1},
 }
 
