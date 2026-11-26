@@ -312,7 +312,7 @@ def load_prices(
     -------
     >>> prices, ts = load_prices("caiso", years=2)
     >>> print(prices.shape)   # (T, 1)
-    >>> print(ts[0])          # 2023-01-01T00:00:00
+    >>> print(ts[0])          # 2024-09-01T00:00:00
     """
     market = market.lower().strip()
     if market not in MARKET_CONFIG:

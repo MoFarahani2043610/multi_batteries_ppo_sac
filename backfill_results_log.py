@@ -117,7 +117,7 @@ for seed, (mean_ret, std_ret) in _leakage.items():
         total_timesteps=1_000_000, eval_episodes=10,
         eval_mean_return=mean_ret, eval_std_return=std_ret,
         notes="Train/eval leakage check (temporally-separated split), real CAISO data. "
-              "Matches M2 baseline ($28.04) within noise -> no leakage-driven inflation.",
+              "Comparable to the M2 baseline ($28.04); a check on a different window, not an exact comparison.",
     )
 
 print("Backfill complete. Review results_log.csv before citing any row in the thesis.")
